@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>FastAPI with HTML Templates</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+
+</head>
+
+<body class="page">
+    <!-- Nav Bar -->
+    <header class="navbar navbar-expand-md d-print-none bg-gray-900" data-bs-theme="dark">
+        <div class="container-xl">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
+            <strong>Auction System - Admin Panel</strong>
+          </h1>
+          <div class="navbar-nav flex-row order-md-last">
+            
+            <div class="d-none d-md-flex">
+              
+              
+            </div>
+            <div class="nav-item">
+              <a class="nav-link d-flex lh-1 text-reset p-0" href="/login"  aria-label="Open user menu">
+                <span class="avatar avatar-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-logout" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" /><path d="M9 12h12l-3 -3" /><path d="M18 15l3 -3" /></svg>
+                </span>
+                <div class="d-none d-xl-block ps-2">
+                  <div>Logout</div>
+                  <div class="mt-1 small text-secondary"></div>
+                </div>
+              </a>
+              
+            </div>
+          </div>
+        </div>
+    </header>
+
+    <div class="container h-100 card ">
+
+        <div class="p-2">
+            <h3>Add Item for Auction</h3>
+            <form action="/add_item" method="post">
+                <div class="row">
+                    <div class="col">
+                        <div class="mb-3">
+                            <label for="" class="form-label">Item Name</label>
+                            <input type="text" name="item_name" class="form-control">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="mb-3">
+                            <label for="" class="form-label">Item Image URL</label>
+                            <input type="text" name="item_url" class="form-control">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="mb-3">
+                            <label for="" class="form-label">Item Auction Price</label>
+                            <input type="text" name="item_price" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col"></div>
+                    <div class="col-auto">
+                        <div class="col">
+                            <div class="mb-3">
+                                <input type="submit" class="btn btn-primary" value="Add Item">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            
+        </div>
+        <div class="card-body overflow-auto">
+            <h3 class="mb-3">Items in Auction</h3>
+            <table class="table table-vcenter">
+                <thead>
+                    <th>Image</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th></th>
+                </thead>
+                <tbody>
+                    {% for item in auction_items %}
+                    <tr>
+                        <td><image src = {{item['url']}} height="150" width="150"></image></td>
+                        <td>{{item['name']}}</td>
+                        <td>{{item['auction_price']}}</td>
+                        <td>
+                            <form action="/remove_auction_item" method="post">
+                                <input type="hidden" name="id" value={{item['id']}}>
+                                <button type="submit" class="btn btn-icon btn-danger">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>
+                                </button>
+                            </form>
+
+                            
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+                
+            </table>
+
+
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-flags.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-payments.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-vendors.min.css">
+
+</body>
+
+</html>
