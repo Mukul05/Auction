@@ -1,3 +1,6 @@
+from database import add_auction_item, place_bid, update_auction_item, delete_auction_item, view_auction_items, \
+    view_bids, create_users_table, validate_user, register_user
+
 from fastapi import FastAPI, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -7,7 +10,8 @@ import uvicorn
 from datetime import datetime
 
 
-import sqlite3
+
+# TODO: Replace direct database interaction with corresponding functions from database.py
 from sqlite3 import Error
 
 def create_connection(db_file):
@@ -19,6 +23,8 @@ def create_connection(db_file):
         print(e)
 
     return conn
+
+create_db()
 
 def execute_query(conn, query):
     """ Execute a single query """
@@ -32,9 +38,7 @@ DEFAULT_PORT = 8000
 app = FastAPI()
 
 # Create users table
-conn = create_connection('users.db')
-execute_query(conn, " CREATE TABLE IF NOT EXISTS users ( id INTEGER PRIMARY KEY, username TEXT NOT NULL, password TEXT NOT NULL);")
-conn.close()
+conn = create_users_table()
 
 # Define the path to your templates directory
 templates = Jinja2Templates(directory="templates")
@@ -97,7 +101,7 @@ async def perform_login(request: Request, login_type: str = Form(...), username:
         else:
             return RedirectResponse("/login_error", status_code=303)
     elif login_type == 'client':
-        if authorize_user(USER_DB, username, password):
+        if validate_user(username, password):
             ACTIVE_USER = username
 
             response = RedirectResponse("/client_home", status_code=303)
@@ -114,10 +118,7 @@ async def register_client(request: Request):
 
 @app.post('/register')
 async def register_client_save(request: Request, username: str = Form(...), password: str = Form(...)):
-    USER_DB.append({
-        "username": username.lower(),
-        "password": password,
-    })
+    register_user(username.lower(), password)
     return RedirectResponse("/login", status_code=303)
 
 
