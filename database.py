@@ -144,5 +144,16 @@ class Database:
         self.cursor.execute(sql, (item_id,))
         return self.cursor.fetchone()
 
+    def fetch_available_auction_items(self):
+        sql = """
+        SELECT auction_items.*, users.name as seller_name 
+        FROM auction_items 
+        JOIN users ON auction_items.user_id = users.user_id 
+        WHERE auction_items.is_sold = FALSE AND auction_items.end_time > NOW()
+        """
+        self.cursor.execute(sql)
+        rows = self.cursor.fetchall()
+        columns = [col[0] for col in self.cursor.description]
+        return [dict(zip(columns, row)) for row in rows]
     def close(self):
         self.conn.close()
