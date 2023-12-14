@@ -28,10 +28,10 @@
 <body>
     <div class="container">
         <h2>Item Sold</h2>
-        <p>The item "{{ item['item_name'] }}" has been successfully sold.</p>
-        <p><strong>Sold Price:</strong> ${{ item['sold_price'] }}</p>
-        <p><strong>Sold To:</strong> {{ item['buyer_email'] }}</p>
-        <p><strong>Sale Date:</strong> {{ item['sold_time'] }}</p>
+        <p>The item "{{ item.item_name }}" has been successfully sold.</p>
+        <p><strong>Sold Price:</strong> ${{ item.sold_price }}</p>
+        <p><strong>Sold To:</strong> {{ item.buyer_email }}</p>
+        <p><strong>Sale Date:</strong> {{ item.sold_time }}</p>
         <!-- Add more details or a link to return to the main page -->
     </div>
 </body>

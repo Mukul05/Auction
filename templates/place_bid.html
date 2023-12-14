@@ -54,9 +54,11 @@
             background-color: #0056b3;
         }
     </style>
+
 </head>
 <body>
-    <div class="container">
+
+    <div class="container" data-highest-bid="{{ highest_bid_amount | default(0, true) }}" data-min-bid="{{ item['min_bid'] }}">
         <div class="item-details">
             <img src="/{{ item['image_url'] }}" alt="{{ item['item_name'] }}">
             <h2>{{ item['item_name'] }}</h2>
@@ -82,11 +84,28 @@
         </div>
 
         <div class="bid-form">
-            <form action="/submit_bid/{{ item['item_id'] }}" method="post">
-                <input type="number" name="bid_amount" min="{{ item['min_bid'] }}" required placeholder="Enter your bid">
-                <input type="submit" value="Place Bid">
-            </form>
-        </div>
+        <form action="/submit_bid/{{ item['item_id'] }}" method="post" onsubmit="return validateBid()">
+            <input type="number" id="bid_amount" name="bid_amount" min="{{ item['min_bid'] }}" required placeholder="Enter your bid">
+            <input type="submit" value="Place Bid">
+        </form>
     </div>
+    </div>
+<script>
+    function validateBid() {
+        var container = document.querySelector('.container');
+        var highestBid = parseFloat(container.getAttribute('data-highest-bid'));
+        var minBid = parseFloat(container.getAttribute('data-min-bid'));
+        var bidAmount = parseFloat(document.getElementById('bid_amount').value);
+
+        var acceptableBid = highestBid > minBid ? highestBid : minBid;
+
+        if (bidAmount <= acceptableBid) {
+            alert("Your bid must be higher than $" + acceptableBid.toFixed(2));
+            document.getElementById('bid_amount').focus();
+            return false;
+        }
+        return true;
+    }
+</script>
 </body>
 </html>

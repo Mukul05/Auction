@@ -130,20 +130,33 @@ async def view_bid(request: Request, item_id: int):
     item_details = db.fetch_item_details(item_id)  # Implement this method to get item details
     if item_details and item_details['is_sold']:
         # Handle the case where the item is already sold
-        return templates.TemplateResponse("item_sold.html", {"request": request, "item": item_details})
+        sold_item_details = db.fetch_sold_item_details(item_id)
+        if sold_item_details:
+            return templates.TemplateResponse("item_sold.html", {
+                "request": request,
+                "item": sold_item_details
+            })
+        else:
+            # Handle the case where sold item details are not available
+            # Redirect or display an error message as needed
+            pass
+
     return templates.TemplateResponse("view_bid.html", {"request": request, "bids": bids, "item": item_details})
 
 @app.post("/mark_item_sold/{item_id}")
 async def mark_item_sold(request: Request, item_id: int):
-    highest_bid = db.get_highest_bid_for_item(item_id)
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=303)
 
+    highest_bid = db.fetch_highest_bid_for_item(item_id)
     if highest_bid:
-        buyer_id, sold_price = highest_bid['user_id'], highest_bid['sold_price']
-        db.mark_item_as_sold(item_id, buyer_id, sold_price)
+        db.mark_item_as_sold(item_id, highest_bid['user_id'], highest_bid['sold_price'])
         message = "Item marked as sold."
     else:
-        # No bids were placed on this item
         message = "No bids placed on this item. Cannot mark as sold."
+
+    return RedirectResponse(url="/seller_home", status_code=303)
 
     # Redirect back to seller_home with a message
     response = RedirectResponse(url="/seller_home", status_code=303)
@@ -173,9 +186,14 @@ async def submit_bid(request: Request, item_id: int, bid_amount: float = Form(..
         return RedirectResponse(url="/login", status_code=303)
 
     item = db.fetch_item_details(item_id)
-    if not item or bid_amount < item['min_bid'] or item['end_time'] < datetime.now():
+    highest_bid = db.fetch_highest_bid_for_item(item_id)
+    highest_bid_amount = highest_bid['sold_price'] if highest_bid else 0
+
+    if not item or bid_amount < item['min_bid'] or item['end_time'] < datetime.now() or bid_amount <= highest_bid_amount:
         # Handle invalid bid scenario
-        return RedirectResponse(url="/place_bid/" + str(item_id), status_code=303)
+        response = RedirectResponse(url="/place_bid/" + str(item_id), status_code=303)
+        response.set_cookie(key="message", value="Please place a higher bid.")
+        return response
 
     db.submit_bid(item_id, user_id, bid_amount)
 
@@ -210,11 +228,25 @@ async def place_bid(request: Request, item_id: int):
         }
         bids_data.append(bid_info)
 
+
+    highest_bid = db.fetch_highest_bid_for_item(item_id)
+    highest_bid_amount = highest_bid.get('amount') if highest_bid else 0  # Use .get() to safely access 'amount'
+
     return templates.TemplateResponse("place_bid.html", {
         "request": request,
         "item": item_details,
         "bids": bids_data,
+        "highest_bid_amount": highest_bid_amount  # Pass this to the template
     })
+
+@app.post("/delete_item/{item_id}")
+async def delete_item(request: Request, item_id: int):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=303)
+
+    db.delete_auction_item(item_id)
+    return RedirectResponse(url="/seller_home", status_code=303)
 
 def send_email_notifications(item_id, item_name, bid_amount):
     # Fetch the seller and all bidders' emails
@@ -228,3 +260,4 @@ def send_email(email, item_name, bid_amount):
     print("send email called for emailid",email)
     print("item name", item_name)
     print(bid_amount, bid_amount)
+

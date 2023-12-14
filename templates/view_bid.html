@@ -37,15 +37,15 @@
     <h2>Bids</h2>
     <table>
         <tr>
-            <th>Bidder ID</th>
+            <th>Bidder Name</th>
             <th>Email</th>
             <th>Amount</th>
         </tr>
         {% for bid in bids %}
         <tr>
-            <td>{{ bid['user_id'] }}</td>
-            <td>{{ bid['email_id'] }}</td>
-            <td>${{ bid['amount'] }}</td>
+           <td>{{ bid['bidder_name'] }}</td>
+        <td>{{ bid['email_id'] }}</td>
+        <td>${{ bid['amount'] }}</td>
         </tr>
         {% endfor %}
             </table>

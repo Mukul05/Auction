@@ -61,6 +61,23 @@
             cursor: pointer;
             color: #4CAF50;
         }
+        .item-list table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 50px; /* Increase vertical spacing between rows */
+        }
+        .item-list th, .item-list td {
+            padding: 50px; /* Increase padding inside cells */
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .item-list img {
+            width: 6900px;
+            height: 100px;
+        }
+        .item-list form {
+            margin: 0 10px; /* Add space between form buttons */
+        }
     </style>
 </head>
 <body>
@@ -86,25 +103,37 @@
             </div>
         </form>
         <h3>Current Listing</h3>
-        <div class="item-list">
-    <!-- Loop through auction items and display them -->
+    <div class="item-list">
+        <table>
+            <tr>
+                <th>Item Image</th>
+                <th>Item Name</th>
+                <th>Min Bid</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Actions</th>
+            </tr>
             {% for item in seller_items %}
-                <div class="item">
-                <img src="/{{ item['image_url'] }}" alt="{{ item['item_name'] }}">
-                <span>{{ item['item_name'] }}</span>
-                <span>Min Bid: ${{ item['min_bid'] }}</span>
-                <span>Start: {{ item['start_time'] }}</span>
-                <span>End: {{ item['end_time'] }}</span>
-                <a href="/view_bid/{{ item['item_id'] }}">View Bid</a>
-                {% if not item['is_sold'] and item['end_time'] < current_time %}
-                    <form action="/mark_item_sold/{{ item['item_id'] }}" method="post">
-                        <input type="submit" value="Mark as Sold">
+            <tr>
+                <td><img src="/{{ item['image_url'] }}" alt="{{ item['item_name'] }}" style="width: 50px;"></td>
+                <td>{{ item['item_name'] }}</td>
+                <td>${{ item['min_bid'] }}</td>
+                <td>{{ item['start_time'] }}</td>
+                <td>{{ item['end_time'] }}</td>
+                <td>
+                    <a href="/view_bid/{{ item['item_id'] }}">View Bid</a>
+                    {% if not item['is_sold'] %}
+                        <form action="/mark_item_sold/{{ item['item_id'] }}" method="post" style="display: inline;">
+                            <input type="submit" value="Mark as Sold">
+                        </form>
+                    {% endif %}
+                    <form action="/delete_item/{{ item['item_id'] }}" method="post" style="display: inline;">
+                        <input type="submit" value="Delete">
                     </form>
-                {% endif %}
-                </div>
+                </td>
+            </tr>
             {% endfor %}
-        </div>
-
+        </table>
     </div>
 </body>
 </html>

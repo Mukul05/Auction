@@ -111,24 +111,17 @@ class Database:
 
     def fetch_bids_for_item(self, item_id):
         sql = """
-        SELECT bids.bid_id, bids.user_id, bids.amount, users.email_id
+        SELECT bids.bid_id, bids.amount, users.name as bidder_name, users.email_id
         FROM bids
         JOIN users ON bids.user_id = users.user_id
         WHERE bids.item_id = %s
+        ORDER BY bids.amount DESC
         """
         self.cursor.execute(sql, (item_id,))
-        return self.cursor.fetchall()
+        rows = self.cursor.fetchall()
+        columns = [col[0] for col in self.cursor.description]
+        return [dict(zip(columns, row)) for row in rows]
 
-    def mark_item_as_sold(self, item_id, buyer_id, sold_price):
-        # Update the auction item as sold
-        sql = "UPDATE auction_items SET is_sold = TRUE WHERE item_id = %s"
-        self.cursor.execute(sql, (item_id,))
-
-        # Add an entry to the sold_items table
-        sold_time = datetime.now()  # Assuming you import datetime
-        sql = "INSERT INTO sold_items (item_id, buyer_id, sold_price, sold_time) VALUES (%s, %s, %s, %s)"
-        self.cursor.execute(sql, (item_id, buyer_id, sold_price, sold_time))
-        self.conn.commit()
 
     def fetch_item_details(self, item_id):
         sql = "SELECT * FROM auction_items WHERE item_id = %s"
@@ -151,10 +144,25 @@ class Database:
         rows = self.cursor.fetchall()
         columns = [col[0] for col in self.cursor.description]
         return [dict(zip(columns, row)) for row in rows]
-    def get_highest_bid_for_item(self, item_id):
-        sql = "SELECT user_id, MAX(amount) AS sold_price FROM bids WHERE item_id = %s GROUP BY user_id ORDER BY sold_price DESC LIMIT 1"
+    def fetch_highest_bid_for_item(self, item_id):
+        sql = "SELECT user_id, MAX(amount) as sold_price FROM bids WHERE item_id = %s GROUP BY user_id ORDER BY sold_price DESC LIMIT 1"
         self.cursor.execute(sql, (item_id,))
-        return self.cursor.fetchone()
+        row = self.cursor.fetchone()
+        if row:
+            columns = [col[0] for col in self.cursor.description]
+            return dict(zip(columns, row))
+        return None
+
+    def delete_auction_item(self, item_id):
+        delete_bids_sql = "DELETE FROM bids WHERE item_id = %s"
+        self.cursor.execute(delete_bids_sql, (item_id,))
+        delete_sold_sql = "DELETE FROM sold_items WHERE item_id = %s"
+        self.cursor.execute(delete_sold_sql, (item_id,))
+
+        # Then, delete the item
+        delete_item_sql = "DELETE FROM auction_items WHERE item_id = %s"
+        self.cursor.execute(delete_item_sql, (item_id,))
+        self.conn.commit()
 
     def fetch_available_auction_items(self):
         sql = """
@@ -184,6 +192,34 @@ class Database:
         """
         self.cursor.execute(sql, (item_id, item_id))
         return [row[0] for row in self.cursor.fetchall()]
+
+    def fetch_sold_item_details(self, item_id):
+        sql = """
+        SELECT ai.item_name, si.sold_price, u.email_id AS buyer_email, si.sold_time
+        FROM auction_items ai
+        JOIN sold_items si ON ai.item_id = si.item_id
+        JOIN users u ON si.buyer_id = u.user_id
+        WHERE ai.item_id = %s AND ai.is_sold = TRUE
+        """
+        self.cursor.execute(sql, (item_id,))
+        row = self.cursor.fetchone()
+        if row:
+            columns = [col[0] for col in self.cursor.description]
+            return dict(zip(columns, row))
+        return None
+
+    def mark_item_as_sold(self, item_id, buyer_id, sold_price):
+        # Update auction item as sold
+        update_sql = "UPDATE auction_items SET is_sold = TRUE WHERE item_id = %s"
+        self.cursor.execute(update_sql, (item_id,))
+
+        # Insert into sold_items table
+        insert_sql = """
+        INSERT INTO sold_items (item_id, buyer_id, sold_price, sold_time)
+        VALUES (%s, %s, %s, NOW())
+        """
+        self.cursor.execute(insert_sql, (item_id, buyer_id, sold_price))
+        self.conn.commit()
 
 
     def close(self):
