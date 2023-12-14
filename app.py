@@ -1,4 +1,6 @@
 import os
+import smtplib
+from email.mime.text import MIMEText
 
 from fastapi import FastAPI, Request, Form, File, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -75,9 +77,10 @@ async def login(request: Request, email_id: str = Form(...), password: str = For
 
 
 @app.get("/logout")
-async def logout(request: Request):
+def logout(request: Request):
+    response = RedirectResponse(url="/login", status_code=303)
     request.session.clear()
-    return RedirectResponse(url="/login")
+    return response
 
 @app.get("/seller_home", response_class=HTMLResponse)
 async def get_seller_home(request: Request):
@@ -146,3 +149,82 @@ async def mark_item_sold(request: Request, item_id: int):
     response = RedirectResponse(url="/seller_home", status_code=303)
     response.set_cookie(key="message", value=message)
     return response
+
+@app.get("/buyer_home", response_class=HTMLResponse)
+async def buyer_home(request: Request):
+    user_id = request.session.get('user_id')
+    if user_id:
+        buyer_details = db.get_user_details(user_id)  # Make sure this method returns the correct details
+        buyer_name = buyer_details['name'] if buyer_details else 'Unknown Buyer'
+        items = db.fetch_available_auction_items()
+        return templates.TemplateResponse("buyer_home.html", {
+            "request": request,
+            "items": items,
+            "buyer_name": buyer_name  # Passing buyer_name to the template
+        })
+    else:
+        return RedirectResponse(url="/login")
+
+
+@app.post("/submit_bid/{item_id}")
+async def submit_bid(request: Request, item_id: int, bid_amount: float = Form(...)):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=303)
+
+    item = db.fetch_item_details(item_id)
+    if not item or bid_amount < item['min_bid'] or item['end_time'] < datetime.now():
+        # Handle invalid bid scenario
+        return RedirectResponse(url="/place_bid/" + str(item_id), status_code=303)
+
+    db.submit_bid(item_id, user_id, bid_amount)
+
+    # Email Notification Logic
+    try:
+        send_email_notifications(item_id, item['item_name'], bid_amount)
+    except Exception as e:
+        print(f"Failed to send email notifications: {e}")
+
+    return RedirectResponse(url="/buyer_home", status_code=303)
+
+@app.get("/place_bid/{item_id}", response_class=HTMLResponse)
+async def place_bid(request: Request, item_id: int):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=303)
+
+    # Fetch item details
+    item_details = db.fetch_item_details(item_id)
+    if not item_details:
+        return RedirectResponse(url="/buyer_home", status_code=303)
+
+    # Fetch bids for the item
+    bids = db.fetch_bids_for_seller(item_id)
+
+    # Transform bids data to include bidder name or other necessary information
+    bids_data = []
+    for bid in bids:
+        bid_info = {
+            'amount': bid['amount'],
+            'bidder_name': bid['bidder_name'],  # or fetch the bidder's name if needed
+        }
+        bids_data.append(bid_info)
+
+    return templates.TemplateResponse("place_bid.html", {
+        "request": request,
+        "item": item_details,
+        "bids": bids_data,
+    })
+
+def send_email_notifications(item_id, item_name, bid_amount):
+    # Fetch the seller and all bidders' emails
+    seller_and_bidders_emails = db.fetch_emails_for_notification(item_id)
+    for email in seller_and_bidders_emails:
+        send_email(email, item_name, bid_amount)
+
+
+def send_email(email, item_name, bid_amount):
+
+    print("send email called for emailid",email)
+    print("item name", item_name)
+    print(bid_amount, bid_amount)

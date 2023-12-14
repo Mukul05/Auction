@@ -139,6 +139,18 @@ class Database:
             return dict(zip(columns, row))
         return None
 
+    def fetch_bids_for_seller(self, item_id):
+        sql = """
+        SELECT bids.amount, users.name AS bidder_name
+        FROM bids
+        JOIN users ON bids.user_id = users.user_id
+        WHERE bids.item_id = %s
+        ORDER BY bids.amount DESC
+        """
+        self.cursor.execute(sql, (item_id,))
+        rows = self.cursor.fetchall()
+        columns = [col[0] for col in self.cursor.description]
+        return [dict(zip(columns, row)) for row in rows]
     def get_highest_bid_for_item(self, item_id):
         sql = "SELECT user_id, MAX(amount) AS sold_price FROM bids WHERE item_id = %s GROUP BY user_id ORDER BY sold_price DESC LIMIT 1"
         self.cursor.execute(sql, (item_id,))
@@ -155,5 +167,24 @@ class Database:
         rows = self.cursor.fetchall()
         columns = [col[0] for col in self.cursor.description]
         return [dict(zip(columns, row)) for row in rows]
+
+    def submit_bid(self, item_id, user_id, bid_amount):
+        sql = "INSERT INTO bids (user_id, item_id, amount) VALUES (%s, %s, %s)"
+        self.cursor.execute(sql, (user_id, item_id, bid_amount))
+        self.conn.commit()
+
+
+
+    def fetch_emails_for_notification(self, item_id):
+        # Fetch the seller's and all bidders' email addresses for the item
+        sql = """
+        SELECT DISTINCT u.email_id FROM users u
+        JOIN bids b ON u.user_id = b.user_id OR u.user_id = (SELECT user_id FROM auction_items WHERE item_id = %s)
+        WHERE b.item_id = %s
+        """
+        self.cursor.execute(sql, (item_id, item_id))
+        return [row[0] for row in self.cursor.fetchall()]
+
+
     def close(self):
         self.conn.close()

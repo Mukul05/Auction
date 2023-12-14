@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Place Bid</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+        .item-details, .bids-table, .bid-form {
+            margin-top: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .bid-form input[type=number] {
+            padding: 10px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .bid-form input[type=submit] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .bid-form input[type=submit]:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="item-details">
+            <img src="/{{ item['image_url'] }}" alt="{{ item['item_name'] }}">
+            <h2>{{ item['item_name'] }}</h2>
+            <p><strong>Start Time:</strong> {{ item['start_time'] }}</p>
+            <p><strong>End Time:</strong> {{ item['end_time'] }}</p>
+            <p><strong>Minimum Bid:</strong> ${{ item['min_bid'] }}</p>
+        </div>
+
+        <div class="bids-table">
+            <h2>Current Bids</h2>
+            <table>
+                <tr>
+                    <th>Bidder</th>
+                    <th>Amount</th>
+                </tr>
+                {% for bid in bids %}
+                <tr>
+                    <td>{{ bid['bidder_name'] }}</td>
+                    <td>${{ bid['amount'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="bid-form">
+            <form action="/submit_bid/{{ item['item_id'] }}" method="post">
+                <input type="number" name="bid_amount" min="{{ item['min_bid'] }}" required placeholder="Enter your bid">
+                <input type="submit" value="Place Bid">
+            </form>
+        </div>
+    </div>
+</body>
+</html>

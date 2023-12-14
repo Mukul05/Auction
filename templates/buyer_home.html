@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Buyer Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header span {
+            font-weight: bold;
+        }
+        .header a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .header a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .item {
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .item:last-child {
+            border-bottom: none;
+        }
+        .item img {
+            max-width: 100px;
+            max-height: 100px;
+            margin-right: 20px;
+            border-radius: 5px;
+        }
+        .item-details {
+            flex-grow: 1;
+        }
+        .item-details h2 {
+            margin: 0;
+            color: #333;
+        }
+        .item-details p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .place-bid-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+        .place-bid-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span>Welcome, {{ buyer_name }}</span>
+        <a href="/logout" class="logout">Logout</a>
+    </div>
+
+    <div class="container">
+        <h1>Available Auction Items</h1>
+        {% for item in items %}
+            <div class="item">
+                <img src="/{{ item['image_url'] }}" alt="{{ item['item_name'] }}">
+                <div class="item-details">
+                    <h2>{{ item['item_name'] }}</h2>
+                    <p>Seller: {{ item['seller_name'] }}</p>
+                    <p>End Time: {{ item['end_time'] }}</p>
+                    <p>Minimum Bid: ${{ item['min_bid'] }}</p>
+                </div>
+                <a href="/place_bid/{{ item['item_id'] }}" class="place-bid-btn">Place Bid</a>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
