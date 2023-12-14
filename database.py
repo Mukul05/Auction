@@ -1,111 +1,113 @@
-
-import sqlite3
-from datetime import datetime
-
-# Database setup and initialization
-def init_db():
-    conn = sqlite3.connect('auction.db')
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS AuctionItems (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            item TEXT NOT NULL,
-            userid INTEGER NOT NULL,
-            start_bid REAL NOT NULL,
-            start_bid_time TEXT NOT NULL,
-            end_bid_time TEXT NOT NULL
+import mysql.connector
+import os
+class Database:
+    def __init__(self):
+        self.conn = mysql.connector.connect(
+            host='localhost',  # MySQL service name in docker-compose.yml
+            port='3306',
+            user='root',
+            password='root',
+            database='bid_system'
         )
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS Bids (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            auction_item_id INTEGER NOT NULL,
-            userid INTEGER NOT NULL,
-            amount REAL NOT NULL,
-            username TEXT NOT NULL,
-            user_email TEXT NOT NULL,
-            FOREIGN KEY (auction_item_id) REFERENCES AuctionItems (id)
-        )
-    ''')
-    conn.commit()
-    conn.close()
+        self.cursor = self.conn.cursor()
 
-def add_auction_item(item, userid, start_bid, start_bid_time, end_bid_time):
-    conn = sqlite3.connect('auction.db')
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO AuctionItems (item, userid, start_bid, start_bid_time, end_bid_time)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (item, userid, start_bid, start_bid_time, end_bid_time))
-    conn.commit()
-    conn.close()
+    # User Operations
+    def create_user(self, name, email_id, password, user_type):
+        sql = "INSERT INTO users (name, email_id, password, user_type) VALUES (%s, %s, %s, %s)"
+        self.cursor.execute(sql, (name, email_id, password, user_type))
+        self.conn.commit()
 
-def place_bid(auction_item_id, userid, amount, username, user_email):
-    conn = sqlite3.connect('auction.db')
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO Bids (auction_item_id, userid, amount, username, user_email)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (auction_item_id, userid, amount, username, user_email))
-    conn.commit()
-    conn.close()
+    def read_user(self, user_id):
+        sql = "SELECT * FROM users WHERE user_id = %s"
+        self.cursor.execute(sql, (user_id,))
+        return self.cursor.fetchone()
 
-def update_auction_item(item_id, **kwargs):
-    conn = sqlite3.connect('auction.db')
-    cursor = conn.cursor()
-    updates = ', '.join([f"{key} = ?" for key in kwargs])
-    values = list(kwargs.values()) + [item_id]
-    cursor.execute(f'''
-        UPDATE AuctionItems
-        SET {updates}
-        WHERE id = ?
-    ''', values)
-    conn.commit()
-    conn.close()
+    def read_user_by_email(self, email_id):
+        sql = "SELECT * FROM users WHERE email_id = %s"
+        self.cursor.execute(sql, (email_id,))
+        row = self.cursor.fetchone()
+        if row:
+            # Convert the tuple to a dictionary
+            columns = [col[0] for col in self.cursor.description]
+            return dict(zip(columns, row))
+        return None
 
-def delete_auction_item(item_id):
-    conn = sqlite3.connect('auction.db')
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM AuctionItems WHERE id = ?', (item_id,))
-    conn.commit()
-    conn.close()
+    def update_user(self, user_id, name, email_id, password, user_type):
+        sql = "UPDATE users SET name = %s, email_id = %s, password = %s, user_type = %s WHERE user_id = %s"
+        self.cursor.execute(sql, (name, email_id, password, user_type, user_id))
+        self.conn.commit()
 
-def view_auction_items():
-    conn = sqlite3.connect('auction.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM AuctionItems')
-    items = cursor.fetchall()
-    conn.close()
-    return items
+    def delete_user(self, user_id):
+        sql = "DELETE FROM users WHERE user_id = %s"
+        self.cursor.execute(sql, (user_id,))
+        self.conn.commit()
 
-def view_bids(auction_item_id):
-    conn = sqlite3.connect('auction.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM Bids WHERE auction_item_id = ?', (auction_item_id,))
-    bids = cursor.fetchall()
-    conn.close()
-    return bids
 
-init_db()
 
-def create_users_table():
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT NOT NULL, password TEXT NOT NULL);")
-    conn.commit()
-    conn.close()
+    # Auction Item Operations
+    def add_auction_item(self, user_id, item_name, image_url, start_time, end_time, min_bid):
+        sql = "INSERT INTO auction_items (user_id, item_name, image_url, start_time, end_time, min_bid) VALUES (%s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(sql, (user_id, item_name, image_url, start_time, end_time, min_bid))
+        self.conn.commit()
 
-def register_user(username, password):
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
-    conn.commit()
-    conn.close()
+    def view_auction_item(self, item_id):
+        sql = "SELECT * FROM auction_items WHERE item_id = %s"
+        self.cursor.execute(sql, (item_id,))
+        return self.cursor.fetchone()
 
-def validate_user(username, password):
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT id FROM users WHERE username = ? AND password = ?", (username, password))
-    user = cursor.fetchone()
-    conn.close()
-    return user is not None
+    def update_auction_item(self, item_id, user_id, item_name, image_url, start_time, end_time, min_bid):
+        sql = "UPDATE auction_items SET user_id = %s, item_name = %s, image_url = %s, start_time = %s, end_time = %s, min_bid = %s WHERE item_id = %s"
+        self.cursor.execute(sql, (user_id, item_name, image_url, start_time, end_time, min_bid, item_id))
+        self.conn.commit()
+
+    def delete_auction_item(self, item_id):
+        sql = "DELETE FROM auction_items WHERE item_id = %s"
+        self.cursor.execute(sql, (item_id,))
+        self.conn.commit()
+
+    def fetch_seller_items(self, user_id):
+        sql = "SELECT * FROM auction_items WHERE user_id = %s"
+        self.cursor.execute(sql, (user_id,))
+        return self.cursor.fetchall()
+
+    def add_auction_item(self, user_id, item_name, image_path, start_time, end_time, min_bid):
+        sql = "INSERT INTO auction_items (user_id, item_name, image_url, start_time, end_time, min_bid) VALUES (%s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(sql, (user_id, item_name, image_path, start_time, end_time, min_bid))
+        self.conn.commit()
+
+    # ... similarly implement view_auction_item, update_auction_item, delete_auction_item
+
+    # Bid Operations
+    def place_bid(self, user_id, item_id, amount):
+        sql = "INSERT INTO bids (user_id, item_id, amount) VALUES (%s, %s, %s)"
+        self.cursor.execute(sql, (user_id, item_id, amount))
+        self.conn.commit()
+
+    def view_bid(self, bid_id):
+        sql = "SELECT * FROM bids WHERE bid_id = %s"
+        self.cursor.execute(sql, (bid_id,))
+        return self.cursor.fetchone()
+
+    def update_bid(self, bid_id, user_id, item_id, amount):
+        sql = "UPDATE bids SET user_id = %s, item_id = %s, amount = %s WHERE bid_id = %s"
+        self.cursor.execute(sql, (user_id, item_id, amount, bid_id))
+        self.conn.commit()
+
+    def delete_bid(self, bid_id):
+        sql = "DELETE FROM bids WHERE bid_id = %s"
+        self.cursor.execute(sql, (bid_id,))
+        self.conn.commit()
+
+    def fetch_bids_for_item(self, item_id):
+        sql = "SELECT * FROM bids WHERE item_id = %s"
+        self.cursor.execute(sql, (item_id,))
+        return self.cursor.fetchall()
+
+    def fetch_item_details(self, item_id):
+        sql = "SELECT * FROM auction_items WHERE item_id = %s"
+        self.cursor.execute(sql, (item_id,))
+        return self.cursor.fetchone()
+
+
+    def close(self):
+        self.conn.close()

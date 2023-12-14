@@ -1,19 +1,26 @@
-version: '3'
+version: '3.8'
 
 services:
-  # ------------------------------------------------------------------------------
-  auction_system:
-    build:
-      context: ./
+  app:
+    build: .
     ports:
-      - "8010:8000"
-  # ------------------------------------------------------------------------------
-  # mongodb:
-  #   image: mongo:latest
-  #   ports:
-  #     - '27017:27017'
-  #   environment:
-  #     MONGO_INITDB_ROOT_USERNAME: root
-  #     MONGO_INITDB_ROOT_PASSWORD: Strong#Pass#2023
-  #   volumes:
-  #     - db_storage:/data/db
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - my_network
+
+  db:
+    image: mysql:5.7
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=bid_system
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    external:
+      name: encscode_my_network

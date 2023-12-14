@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Register</title>
+    <title>Login</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,7 +14,7 @@
             margin: 0;
         }
 
-        .register-container {
+        .login-container {
             background-color: white;
             padding: 20px;
             border-radius: 5px;
@@ -22,11 +23,11 @@
             width: 300px;
         }
 
-        .register-container h2 {
+        .login-container h2 {
             margin: 10px 0;
         }
 
-        input[type=text], input[type=email], input[type=password], select {
+        input[type=email], input[type=password] {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
@@ -50,21 +51,17 @@
         }
     </style>
 </head>
-<body>
-    <div class="register-container">
-        <h2>Register</h2>
-        <form action="/register" method="post">
-            <input type="text" id="name" name="name" placeholder="Name" required><br>
-            <input type="email" id="email_id" name="email_id" placeholder="Email ID" required><br>
-            <select name="user_type" id="user_type" required>
-                <option value="buyer">Buyer</option>
-                <option value="seller">Seller</option>
-                <!-- Remove or disable the admin option if admin registration shouldn't be public -->
 
-            </select><br>
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form action="/login" method="post">
+            <input type="email" id="email_id" name="email_id" placeholder="Email ID" required><br>
             <input type="password" id="password" name="password" placeholder="Password" required><br>
-            <input type="submit" value="Register">
+            <input type="submit" value="Login">
         </form>
+        <p>New User? <a href="/register">Register Here</a></p>
     </div>
 </body>
+
 </html>
