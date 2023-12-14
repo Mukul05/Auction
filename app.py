@@ -248,6 +248,22 @@ async def delete_item(request: Request, item_id: int):
     db.delete_auction_item(item_id)
     return RedirectResponse(url="/seller_home", status_code=303)
 
+@app.get("/admin_home", response_class=HTMLResponse)
+async def admin_home(request: Request):
+    user_id = request.session.get('user_id')
+    user_type = request.session.get('user_type')
+
+    if not user_id or user_type != 'admin':
+        return RedirectResponse(url="/login", status_code=303)
+
+    # Fetch all auction items for admin view
+    all_items = db.fetch_all_auction_items()  # You need to implement this method in your database class
+
+    return templates.TemplateResponse("admin_home.html", {
+        "request": request,
+        "items": all_items
+    })
+
 def send_email_notifications(item_id, item_name, bid_amount):
     # Fetch the seller and all bidders' emails
     seller_and_bidders_emails = db.fetch_emails_for_notification(item_id)
