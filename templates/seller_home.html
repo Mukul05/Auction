@@ -65,7 +65,7 @@
 </head>
 <body>
     <div class="header">
-        <span>[Seller's Name]</span>
+        <span>{{ seller_name }}</span>
         <span class="logout">Logout</span>
     </div>
     <div class="container">
@@ -86,18 +86,24 @@
         </form>
         <h3>Current Listing</h3>
         <div class="item-list">
-            <!-- Loop through auction items and display them -->
-            <!-- Example item -->
-            <div class="item">
-                <img src="[Item Image URL]" alt="[Item Name]">
-                <span>[Item Name]</span>
-                <span>Min Bid: $[Min Bid]</span>
-                <span>Start: [Start Time]</span>
-                <span>End: [End Time]</span>
-                 <a href="/view_bid/{{ item.id }}">View Bid</a>
-            </div>
-            <!-- Repeat for each item -->
+    <!-- Loop through auction items and display them -->
+            {% for item in seller_items %}
+                <div class="item">
+                <img src="/{{ item['image_url'] }}" alt="{{ item['item_name'] }}">
+                <span>{{ item['item_name'] }}</span>
+                <span>Min Bid: ${{ item['min_bid'] }}</span>
+                <span>Start: {{ item['start_time'] }}</span>
+                <span>End: {{ item['end_time'] }}</span>
+                <a href="/view_bid/{{ item['item_id'] }}">View Bid</a>
+                {% if not item['is_sold'] and item['end_time'] < current_time %}
+                    <form action="/mark_item_sold/{{ item['item_id'] }}" method="post">
+                        <input type="submit" value="Mark as Sold">
+                    </form>
+                {% endif %}
+                </div>
+            {% endfor %}
         </div>
+
     </div>
 </body>
 </html>
