@@ -58,7 +58,7 @@ async def post_login(request: Request, email_id: str = Form(...), password: str 
             elif user['user_type'] == 'seller':
                 return RedirectResponse(url="/seller_home", status_code=303)
             elif user['user_type'] == 'admin':
-                return RedirectResponse(url="/admin_console", status_code=303)
+                return RedirectResponse(url="/admin_home", status_code=303)
         else:
             return templates.TemplateResponse("login_error.html", {"request": request})
     except Exception as e:
@@ -254,14 +254,15 @@ async def admin_home(request: Request):
     user_type = request.session.get('user_type')
 
     if not user_id or user_type != 'admin':
-        return RedirectResponse(url="/login", status_code=303)
+        return RedirectResponse(url="/login")
 
-    # Fetch all auction items for admin view
-    all_items = db.fetch_all_auction_items()  # You need to implement this method in your database class
+    all_items = db.fetch_all_items_with_sellers()  # This method needs to be implemented in the Database class
+    current_time = datetime.now()
 
     return templates.TemplateResponse("admin_home.html", {
         "request": request,
-        "items": all_items
+        "items": all_items,
+        "current_time": current_time
     })
 
 def send_email_notifications(item_id, item_name, bid_amount):

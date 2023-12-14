@@ -1,124 +1,141 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <title>FastAPI with HTML Templates</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
-
+    <title>Admin Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .container {
+            padding: 20px;
+        }
+        .item-list {
+            margin-top: 20px;
+            border-top: 2px solid black;
+        }
+        .item {
+            background-color: #fff;
+            margin-bottom: 10px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .item img {
+            max-height: 100px;
+            margin-right: 20px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        input[type=text], input[type=datetime-local], input[type=number], input[type=file], input[type=url] {
+            padding: 10px;
+            margin-right: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        input[type=submit] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type=submit]:hover {
+            background-color: #45a049;
+        }
+        .logout {
+            cursor: pointer;
+            color: #4CAF50;
+        }
+        .item-list table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 50px; /* Increase vertical spacing between rows */
+        }
+        .item-list th, .item-list td {
+            padding: 50px; /* Increase padding inside cells */
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .item-list img {
+            width: 6900px;
+            height: 100px;
+        }
+        .item-list form {
+            margin: 0 10px; /* Add space between form buttons */
+        }
+    </style>
 </head>
-
-<body class="page">
-    <!-- Nav Bar -->
-    <header class="navbar navbar-expand-md d-print-none bg-gray-900" data-bs-theme="dark">
-        <div class="container-xl">
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
-            <strong>Auction System - Admin Panel</strong>
-          </h1>
-          <div class="navbar-nav flex-row order-md-last">
-            
-            <div class="d-none d-md-flex">
-              
-              
-            </div>
-            <div class="nav-item">
-              <a class="nav-link d-flex lh-1 text-reset p-0" href="/login"  aria-label="Open user menu">
-                <span class="avatar avatar-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-logout" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" /><path d="M9 12h12l-3 -3" /><path d="M18 15l3 -3" /></svg>
-                </span>
-                <div class="d-none d-xl-block ps-2">
-                  <div>Logout</div>
-                  <div class="mt-1 small text-secondary"></div>
-                </div>
-              </a>
-              
-            </div>
-          </div>
-        </div>
-    </header>
-
-    <div class="container h-100 card ">
-
-        <div class="p-2">
-            <h3>Add Item for Auction</h3>
-            <form action="/add_item" method="post">
-                <div class="row">
-                    <div class="col">
-                        <div class="mb-3">
-                            <label for="" class="form-label">Item Name</label>
-                            <input type="text" name="item_name" class="form-control">
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="mb-3">
-                            <label for="" class="form-label">Item Image URL</label>
-                            <input type="text" name="item_url" class="form-control">
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="mb-3">
-                            <label for="" class="form-label">Item Auction Price</label>
-                            <input type="text" name="item_price" class="form-control">
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col"></div>
-                    <div class="col-auto">
-                        <div class="col">
-                            <div class="mb-3">
-                                <input type="submit" class="btn btn-primary" value="Add Item">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-            
-        </div>
-        <div class="card-body overflow-auto">
-            <h3 class="mb-3">Items in Auction</h3>
-            <table class="table table-vcenter">
-                <thead>
-                    <th>Image</th>
-                    <th>Name</th>
-                    <th>Price</th>
-                    <th></th>
-                </thead>
-                <tbody>
-                    {% for item in auction_items %}
-                    <tr>
-                        <td><image src = {{item['url']}} height="150" width="150"></image></td>
-                        <td>{{item['name']}}</td>
-                        <td>{{item['auction_price']}}</td>
-                        <td>
-                            <form action="/remove_auction_item" method="post">
-                                <input type="hidden" name="id" value={{item['id']}}>
-                                <button type="submit" class="btn btn-icon btn-danger">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>
-                                </button>
-                            </form>
-
-                            
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-                
-            </table>
-
-
-        </div>
+<body>
+    <div class="header">
+        <span>{{ seller_name }}</span>
+        <span class="logout">Logout</span>
+        <a href="/logout">Logout</a>
     </div>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-flags.min.css">
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-payments.min.css">
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-vendors.min.css">
-
+    <div class="container">
+        <h2>Sell Items</h2>
+        <form action="/add_item" method="post" enctype="multipart/form-data">
+            <!-- Fields for item details -->
+            <div class="form-group">
+                <input type="file" id="image" name="image">
+                <input type="url" id="image_url" name="image_url" placeholder="Or paste image URL">
+            </div>
+            <div class="form-group">
+                <input type="text" id="item_name" name="item_name" placeholder="Item Name" required>
+                <input type="datetime-local" id="start_time" name="start_time" required>
+                <input type="datetime-local" id="end_time" name="end_time" required>
+                <input type="number" id="min_bid" name="min_bid" placeholder="Minimum Bid" required>
+                <input type="submit" value="Submit">
+            </div>
+        </form>
+        <h3>All Auction Items</h3>
+    <div class="item-list">
+        <table>
+            <tr>
+                <th>Item Image</th>
+                <th>Seller Name</th>
+                <th>Item Name</th>
+                <th>Min Bid</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Actions</th>
+            </tr>
+             {% for item in items %}
+            <tr>
+                <td><img src="/{{ item['image_url'] }}" alt="{{ item['item_name'] }}" style="width: 50px;"></td>
+                <td> {{ item['seller_name'] }}</td>
+                <td>{{ item['item_name'] }}</td>
+                <td>${{ item['min_bid'] }}</td>
+                <td>{{ item['start_time'] }}</td>
+                <td>{{ item['end_time'] }}</td>
+                <td>
+                    <a href="/view_bid/{{ item['item_id'] }}">View Bid</a>
+                    {% if not item['is_sold'] %}
+                        <form action="/mark_item_sold/{{ item['item_id'] }}" method="post" style="display: inline;">
+                            <input type="submit" value="Mark as Sold">
+                        </form>
+                    {% endif %}
+                    <form action="/delete_item/{{ item['item_id'] }}" method="post" style="display: inline;">
+                        <input type="submit" value="Delete">
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
 </body>
-
 </html>

@@ -74,6 +74,17 @@ class Database:
         columns = [col[0] for col in self.cursor.description]
         return [dict(zip(columns, row)) for row in rows]
 
+    def fetch_all_items_with_sellers(self):
+        sql = """
+        SELECT auction_items.*, users.name AS seller_name
+        FROM auction_items
+        JOIN users ON auction_items.user_id = users.user_id
+        """
+        self.cursor.execute(sql)
+        rows = self.cursor.fetchall()
+        columns = [col[0] for col in self.cursor.description]
+        return [dict(zip(columns, row)) for row in rows]
+
     def get_user_details(self, user_id):
         sql = "SELECT * FROM users WHERE user_id = %s"
         self.cursor.execute(sql, (user_id,))
