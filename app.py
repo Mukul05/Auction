@@ -206,7 +206,11 @@ async def mark_item_sold(request: Request, item_id: int):
                 db.mark_item_as_sold(item_id, highest_bid['user_id'], highest_bid['sold_price'])
                 message = "Item marked as sold."
                 item_name_email = db.get_item_name(item_id)
-                send_email_notifications_update(item_id, item_name_email, 'sold')
+                try:
+                    send_email_notifications_update(item_id, item_name_email, 'sold')
+                except Exception as e:
+                    print(f"Failed to send email notifications: {e}")
+
             except Exception as e:
                 print(f"Error marking item as sold: {e}")
                 # Render an error page or return a specific response
@@ -349,7 +353,10 @@ async def delete_item(request: Request, item_id: int):
     if not user_id:
         return RedirectResponse(url="/login", status_code=303)
     item_name = db.get_item_name(item_id)
-    send_email_notifications_update(item_id,item_name,'deleted')
+    try:
+        send_email_notifications_update(item_id, item_name, 'sold')
+    except Exception as e:
+        print(f"Failed to send email notifications: {e}")
     db.delete_auction_item(item_id)
 
     return RedirectResponse(url="/seller_home", status_code=303)
@@ -395,7 +402,10 @@ async def admin_mark_item_sold(request: Request, item_id: int):
                 db.mark_item_as_sold(item_id, highest_bid['user_id'], highest_bid['sold_price'])
                 message = "Item marked as sold."
                 item_name_email = db.get_item_name(item_id)
-                send_email_notifications_update(item_id, item_name_email, 'sold')
+                try:
+                    send_email_notifications_update(item_id, item_name_email, 'sold')
+                except Exception as e:
+                    print(f"Failed to send email notifications: {e}")
             except Exception as e:
                 print(f"Error marking item as sold by admin: {e}")
                 return templates.TemplateResponse("error.html", {
@@ -423,7 +433,10 @@ async def admin_delete_item(request: Request, item_id: int):
     if user_type != 'admin':
         return RedirectResponse(url="/login", status_code=303)
     item_name = db.get_item_name(item_id)
-    send_email_notifications_update(item_id, item_name, 'deleted')
+    try:
+        send_email_notifications_update(item_id, item_name, 'sold')
+    except Exception as e:
+        print(f"Failed to send email notifications: {e}")
     db.delete_auction_item(item_id)
     return RedirectResponse(url="/admin_home", status_code=303)
 
