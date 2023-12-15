@@ -131,6 +131,7 @@ async def add_item(request: Request, item_name: str = Form(...), start_time: str
 
     try:
         # Add auction item to the database
+        start_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         db.add_auction_item(seller_id, item_name, image_path, start_time, end_time, min_bid)
     except Exception as e:
         print(f"Error adding auction item: {e}")
