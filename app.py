@@ -444,7 +444,7 @@ def send_email(email, item_name, bid_amount):
         # SMTP server configuration for Gmail
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         #server.starttls()
-        server.login('mukulsharma1998@gmail.com', 'xojbwcoehidzuqni')  # Replace with your Gmail credentials
+        server.login('mukulsharma1998@gmail.com', '-')  # Replace with your Gmail credentials
         server.send_message(msg)
         server.quit()
     except Exception as e:
@@ -473,7 +473,7 @@ def send_email_update(email, item_name, update_type):
         # SMTP server configuration for Gmail
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         #server.starttls()
-        server.login('mukulsharma1998@gmail.com', 'xojbwcoehidzuqni')  # Replace with your Gmail credentials
+        server.login('mukulsharma1998@gmail.com', '-')  # Replace with your Gmail credentials
         server.send_message(msg)
         server.quit()
     except Exception as e:
