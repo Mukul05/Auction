@@ -115,7 +115,7 @@ async def get_seller_home(request: Request):
 
 
 @app.post("/add_item")
-async def add_item(request: Request, item_name: str = Form(...), start_time: str = Form(...), end_time: str = Form(...),
+async def add_item(request: Request, item_name: str = Form(...), end_time: str = Form(...),
                    min_bid: float = Form(...), image: UploadFile = File(None), image_url: str = Form(None)):
     seller_id = request.session.get('user_id')
     if not seller_id:
