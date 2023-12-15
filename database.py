@@ -5,7 +5,7 @@ import os
 class Database:
     def __init__(self):
         self.conn = mysql.connector.connect(
-            host='localhost',  # MySQL service name in docker-compose.yml
+            host='localhost',  # MySQL service name in
             port='3306',
             user='root',
             password='root',
