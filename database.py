@@ -63,8 +63,17 @@ class Database:
         self.conn.commit()
 
     def delete_auction_item(self, item_id):
-        sql = "DELETE FROM auction_items WHERE item_id = %s"
-        self.cursor.execute(sql, (item_id,))
+        # Delete all bids associated with the item
+        delete_bids_sql = "DELETE FROM bids WHERE item_id = %s"
+        self.cursor.execute(delete_bids_sql, (item_id,))
+
+        # Delete the record from sold_items if it exists
+        delete_sold_sql = "DELETE FROM sold_items WHERE item_id = %s"
+        self.cursor.execute(delete_sold_sql, (item_id,))
+
+        # Finally, delete the item from auction_items
+        delete_item_sql = "DELETE FROM auction_items WHERE item_id = %s"
+        self.cursor.execute(delete_item_sql, (item_id,))
         self.conn.commit()
 
     def fetch_seller_items(self, user_id):

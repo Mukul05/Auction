@@ -14,6 +14,7 @@ from starlette.config import Config
 from starlette.datastructures import Secret
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime
+from error_handling import database_error_handler
 
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -34,7 +35,12 @@ async def get_register(request: Request):
 @app.post("/register")
 async def post_register(request: Request, name: str = Form(...), email_id: str = Form(...), password: str = Form(...),
                         user_type: str = Form(...)):
-    db.create_user(name, email_id, password, user_type)
+    try:
+        db.create_user(name, email_id, password, user_type)
+    except Exception as e:
+        print(f"Error during user registration: {e}")
+        # You can redirect to an error page or show an error message
+        return templates.TemplateResponse("register_error.html", {"request": request, "error": str(e)})
     return RedirectResponse(url="/", status_code=303)
 
 
@@ -85,31 +91,54 @@ def logout(request: Request):
 @app.get("/seller_home", response_class=HTMLResponse)
 async def get_seller_home(request: Request):
     seller_id = request.session.get('user_id')
-    if seller_id:
+    if not seller_id:
+        return RedirectResponse(url="/login")
+
+    try:
         seller_items = db.fetch_seller_items(seller_id)
         seller_details = db.get_user_details(seller_id)
-        seller_name = seller_details['name'] if seller_details else 'Unknown Seller'
-        current_time = datetime.now()  # Get the current time
-        return templates.TemplateResponse("seller_home.html", {
-            "request": request,
-            "seller_items": seller_items,
-            "seller_name": seller_name,
-            "current_time": current_time  # Pass current_time to the template
-        })
-    else:
-        return RedirectResponse(url="/login")
+    except Exception as e:
+        print(f"Error retrieving seller data: {e}")
+        # Render an error page or return a specific response
+        return templates.TemplateResponse("database_error.html", {"request": request, "error": "Error retrieving seller data"})
+
+    seller_name = seller_details['name'] if seller_details else 'Unknown Seller'
+    current_time = datetime.now()  # Get the current time
+
+    return templates.TemplateResponse("seller_home.html", {
+        "request": request,
+        "seller_items": seller_items,
+        "seller_name": seller_name,
+        "current_time": current_time
+    })
+
 
 
 @app.post("/add_item")
 async def add_item(request: Request, item_name: str = Form(...), start_time: str = Form(...), end_time: str = Form(...),
                    min_bid: float = Form(...), image: UploadFile = File(None), image_url: str = Form(None)):
-    seller_id = request.session.get('user_id')  # Changed from request.state to request.session
+    seller_id = request.session.get('user_id')
     if not seller_id:
         return RedirectResponse(url="/login", status_code=303)
 
-    image_path = await save_image(image) if image else image_url
-    db.add_auction_item(seller_id, item_name, image_path, start_time, end_time, min_bid)
+    try:
+        # Save image or use provided image URL
+        image_path = await save_image(image) if image else image_url
+    except Exception as e:
+        print(f"Error saving image: {e}")
+        # Render an error page or return a specific response for image saving failure
+        return templates.TemplateResponse("image_error.html", {"request": request, "error": "Error saving image"})
+
+    try:
+        # Add auction item to the database
+        db.add_auction_item(seller_id, item_name, image_path, start_time, end_time, min_bid)
+    except Exception as e:
+        print(f"Error adding auction item: {e}")
+        # Render an error page or return a specific response for database operation failure
+        return templates.TemplateResponse("database_error.html", {"request": request, "error": "Error adding auction item"})
+
     return RedirectResponse(url="/seller_home", status_code=303)
+
 
 async def save_image(image: UploadFile):
     try:
@@ -126,22 +155,42 @@ async def save_image(image: UploadFile):
 
 @app.get("/view_bid/{item_id}", response_class=HTMLResponse)
 async def view_bid(request: Request, item_id: int):
-    bids = db.fetch_bids_for_item(item_id)  # You need to implement this method in database.py
-    item_details = db.fetch_item_details(item_id)  # Implement this method to get item details
-    if item_details and item_details['is_sold']:
-        # Handle the case where the item is already sold
-        sold_item_details = db.fetch_sold_item_details(item_id)
-        if sold_item_details:
-            return templates.TemplateResponse("item_sold.html", {
+    try:
+        item_details = db.fetch_item_details(item_id)
+        if not item_details:
+            # Handle the case when item details are not found
+            return templates.TemplateResponse("error.html", {
                 "request": request,
-                "item": sold_item_details
+                "error": "Item details not found."
             })
-        else:
-            # Handle the case where sold item details are not available
-            # Redirect or display an error message as needed
-            pass
 
-    return templates.TemplateResponse("view_bid.html", {"request": request, "bids": bids, "item": item_details})
+        if item_details.get('is_sold', False):
+            try:
+                sold_item_details = db.fetch_sold_item_details(item_id)
+                if sold_item_details:
+                    return templates.TemplateResponse("item_sold.html", {
+                        "request": request,
+                        "item": sold_item_details
+                    })
+            except Exception as e:
+                print(f"Error fetching sold item details: {e}")
+                # Render an error page or return a specific response
+                return templates.TemplateResponse("error.html", {
+                    "request": request,
+                    "error": "Error fetching sold item details."
+                })
+
+        bids = db.fetch_bids_for_item(item_id)
+        return templates.TemplateResponse("view_bid.html", {"request": request, "bids": bids, "item": item_details})
+
+    except Exception as e:
+        print(f"Error fetching bid data: {e}")
+        # Render an error page or return a specific response
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "error": "Error fetching bid data."
+        })
+
 
 @app.post("/mark_item_sold/{item_id}")
 async def mark_item_sold(request: Request, item_id: int):
@@ -149,34 +198,69 @@ async def mark_item_sold(request: Request, item_id: int):
     if not user_id:
         return RedirectResponse(url="/login", status_code=303)
 
-    highest_bid = db.fetch_highest_bid_for_item(item_id)
-    if highest_bid:
-        db.mark_item_as_sold(item_id, highest_bid['user_id'], highest_bid['sold_price'])
-        message = "Item marked as sold."
-    else:
-        message = "No bids placed on this item. Cannot mark as sold."
+    try:
+        highest_bid = db.fetch_highest_bid_for_item(item_id)
+        if highest_bid:
+            try:
+                db.mark_item_as_sold(item_id, highest_bid['user_id'], highest_bid['sold_price'])
+                message = "Item marked as sold."
+            except Exception as e:
+                print(f"Error marking item as sold: {e}")
+                # Render an error page or return a specific response
+                return templates.TemplateResponse("error.html", {
+                    "request": request,
+                    "error": "Error marking item as sold."
+                })
+        else:
+            message = "No bids placed on this item. Cannot mark as sold."
 
-    return RedirectResponse(url="/seller_home", status_code=303)
+        # Redirect back to seller_home with a message
+        response = RedirectResponse(url="/seller_home", status_code=303)
+        response.set_cookie(key="message", value=message)
+        return response
 
-    # Redirect back to seller_home with a message
-    response = RedirectResponse(url="/seller_home", status_code=303)
-    response.set_cookie(key="message", value=message)
-    return response
+    except Exception as e:
+        print(f"Error fetching highest bid for item: {e}")
+        # Render an error page or return a specific response
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "error": "Error fetching highest bid for item."
+        })
+
 
 @app.get("/buyer_home", response_class=HTMLResponse)
 async def buyer_home(request: Request):
     user_id = request.session.get('user_id')
-    if user_id:
-        buyer_details = db.get_user_details(user_id)  # Make sure this method returns the correct details
-        buyer_name = buyer_details['name'] if buyer_details else 'Unknown Buyer'
+    if not user_id:
+        return RedirectResponse(url="/login")
+
+    try:
+        # Fetch buyer details
+        buyer_details = db.get_user_details(user_id)
+        if not buyer_details:
+            # Handle case when buyer details are not found
+            return templates.TemplateResponse("error.html", {
+                "request": request,
+                "error": "Buyer details not found."
+            })
+        buyer_name = buyer_details['name']
+
+        # Fetch available auction items
         items = db.fetch_available_auction_items()
         return templates.TemplateResponse("buyer_home.html", {
             "request": request,
             "items": items,
-            "buyer_name": buyer_name  # Passing buyer_name to the template
+            "buyer_name": buyer_name
         })
-    else:
-        return RedirectResponse(url="/login")
+
+    except Exception as e:
+        print(f"Error fetching data for buyer home: {e}")
+        # Render an error page or return a specific response
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "error": "Error fetching data for buyer home."
+        })
+
 
 
 @app.post("/submit_bid/{item_id}")
@@ -185,25 +269,41 @@ async def submit_bid(request: Request, item_id: int, bid_amount: float = Form(..
     if not user_id:
         return RedirectResponse(url="/login", status_code=303)
 
-    item = db.fetch_item_details(item_id)
-    highest_bid = db.fetch_highest_bid_for_item(item_id)
-    highest_bid_amount = highest_bid['sold_price'] if highest_bid else 0
-
-    if not item or bid_amount < item['min_bid'] or item['end_time'] < datetime.now() or bid_amount <= highest_bid_amount:
-        # Handle invalid bid scenario
-        response = RedirectResponse(url="/place_bid/" + str(item_id), status_code=303)
-        response.set_cookie(key="message", value="Please place a higher bid.")
-        return response
-
-    db.submit_bid(item_id, user_id, bid_amount)
-
-    # Email Notification Logic
     try:
-        send_email_notifications(item_id, item['item_name'], bid_amount)
-    except Exception as e:
-        print(f"Failed to send email notifications: {e}")
+        item = db.fetch_item_details(item_id)
+        if not item:
+            # Handle case when item details are not found
+            return templates.TemplateResponse("error.html", {
+                "request": request,
+                "error": "Item details not found."
+            })
 
-    return RedirectResponse(url="/buyer_home", status_code=303)
+        highest_bid = db.fetch_highest_bid_for_item(item_id)
+        highest_bid_amount = highest_bid['sold_price'] if highest_bid else 0
+
+        if bid_amount < item['min_bid'] or item['end_time'] < datetime.now() or bid_amount <= highest_bid_amount:
+            # Handle invalid bid scenario
+            response = RedirectResponse(url="/place_bid/" + str(item_id), status_code=303)
+            response.set_cookie(key="message", value="Invalid bid amount.")
+            return response
+
+        db.submit_bid(item_id, user_id, bid_amount)
+
+        # Email Notification Logic
+        try:
+            send_email_notifications(item_id, item['item_name'], bid_amount)
+        except Exception as e:
+            print(f"Failed to send email notifications: {e}")
+
+        return RedirectResponse(url="/buyer_home", status_code=303)
+
+    except Exception as e:
+        print(f"Error during bid submission: {e}")
+        # Render an error page or return a specific response
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "error": "Error during bid submission."
+        })
 
 @app.get("/place_bid/{item_id}", response_class=HTMLResponse)
 async def place_bid(request: Request, item_id: int):
@@ -246,6 +346,7 @@ async def delete_item(request: Request, item_id: int):
         return RedirectResponse(url="/login", status_code=303)
 
     db.delete_auction_item(item_id)
+
     return RedirectResponse(url="/seller_home", status_code=303)
 
 @app.get("/admin_home", response_class=HTMLResponse)
@@ -256,14 +357,67 @@ async def admin_home(request: Request):
     if not user_id or user_type != 'admin':
         return RedirectResponse(url="/login")
 
-    all_items = db.fetch_all_items_with_sellers()  # This method needs to be implemented in the Database class
-    current_time = datetime.now()
+    try:
+        # Fetch all items including seller details
+        all_items = db.fetch_all_items_with_sellers()
+        current_time = datetime.now()
 
-    return templates.TemplateResponse("admin_home.html", {
-        "request": request,
-        "items": all_items,
-        "current_time": current_time
-    })
+        return templates.TemplateResponse("admin_home.html", {
+            "request": request,
+            "items": all_items,
+            "current_time": current_time
+        })
+
+    except Exception as e:
+        print(f"Error fetching data for admin home: {e}")
+        # Render an error page or return a specific response
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "error": "Error fetching data for admin home."
+        })
+
+@app.post("/admin/mark_item_sold/{item_id}")
+async def admin_mark_item_sold(request: Request, item_id: int):
+    # Ensure the user is an admin
+    user_type = request.session.get('user_type')
+    if user_type != 'admin':
+        return RedirectResponse(url="/login", status_code=303)
+
+    try:
+        highest_bid = db.fetch_highest_bid_for_item(item_id)
+        if highest_bid:
+            try:
+                db.mark_item_as_sold(item_id, highest_bid['user_id'], highest_bid['sold_price'])
+                message = "Item marked as sold."
+            except Exception as e:
+                print(f"Error marking item as sold by admin: {e}")
+                return templates.TemplateResponse("error.html", {
+                    "request": request,
+                    "error": "Error marking item as sold."
+                })
+        else:
+            message = "No bids placed on this item. Cannot mark as sold."
+
+        response = RedirectResponse(url="/admin_home", status_code=303)
+        response.set_cookie(key="message", value=message)
+        return response
+
+    except Exception as e:
+        print(f"Error in admin mark item sold process: {e}")
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "error": "An error occurred while marking the item as sold."
+        })
+
+@app.post("/admin/delete_item/{item_id}")
+async def admin_delete_item(request: Request, item_id: int):
+    # Ensure the user is an admin
+    user_type = request.session.get('user_type')
+    if user_type != 'admin':
+        return RedirectResponse(url="/login", status_code=303)
+
+    db.delete_auction_item(item_id)
+    return RedirectResponse(url="/admin_home", status_code=303)
 
 def send_email_notifications(item_id, item_name, bid_amount):
     # Fetch the seller and all bidders' emails
@@ -273,8 +427,24 @@ def send_email_notifications(item_id, item_name, bid_amount):
 
 
 def send_email(email, item_name, bid_amount):
+    try:
+        msg = MIMEText(
+            f"Hi,\n\nThe bidding for your item {item_name} has a new bidder.\nCurrent max bid amount: ${bid_amount}")
+        msg['Subject'] = 'New Bidding Amount'
+        msg['From'] = 'mukulsharma1998@gmail.com'  # Replace with your Gmail address
+        msg['To'] = email
 
-    print("send email called for emailid",email)
-    print("item name", item_name)
-    print(bid_amount, bid_amount)
+        # SMTP server configuration for Gmail
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        #server.starttls()
+        server.login('mukulsharma1998@gmail.com', '-')  # Replace with your Gmail credentials
+        server.send_message(msg)
+        server.quit()
+    except Exception as e:
+        raise Exception(f"Email sending failed: {e}")
+
+
+
+
+
 
