@@ -438,13 +438,13 @@ def send_email(email, item_name, bid_amount):
         msg = MIMEText(
             f"Hi,\n\nThe bidding for your item {item_name} has a new bidder.\nCurrent max bid amount: ${bid_amount}")
         msg['Subject'] = 'New Bidding Amount'
-        msg['From'] = 'mukulsharma1998@gmail.com'  # Replace with your Gmail address
+        msg['From'] = 'onlinebidder17@gmail.com'  # Replace with your Gmail address
         msg['To'] = email
 
         # SMTP server configuration for Gmail
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         #server.starttls()
-        server.login('mukulsharma1998@gmail.com', '-')  # Replace with your Gmail credentials
+        server.login('onlinebidder17@gmail.com', 'ijriugibmekltnjt')   # Replace with your Gmail credentials
         server.send_message(msg)
         server.quit()
     except Exception as e:
@@ -467,18 +467,17 @@ def send_email_update(email, item_name, update_type):
     try:
         msg = MIMEText(body)
         msg['Subject'] = subject
-        msg['From'] = 'mukulsharma1998@gmail.com'  # Replace with your Gmail address
+        msg['From'] = 'onlinebidder17@gmail.com'  # Replace with your Gmail address
         msg['To'] = email
 
         # SMTP server configuration for Gmail
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        #server.starttls()
-        server.login('mukulsharma1998@gmail.com', '-')  # Replace with your Gmail credentials
+        # server.starttls()
+        server.login('onlinebidder17@gmail.com', 'ijriugibmekltnjt')  # Replace with your Gmail credentials
         server.send_message(msg)
         server.quit()
     except Exception as e:
         raise Exception(f"Email sending failed: {e}")
-
 
 
 
