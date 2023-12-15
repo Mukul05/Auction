@@ -240,6 +240,14 @@ class Database:
         """
         self.cursor.execute(insert_sql, (item_id, buyer_id, sold_price))
         self.conn.commit()
+    def get_item_name(self, item_id):
+        query = "SELECT item_name FROM auction_items WHERE item_id = %s"
+        self.cursor.execute(query, (item_id,))
+        row = self.cursor.fetchone()
+        if row:
+            return row[0]
+        return None
+
 
 
     def close(self):

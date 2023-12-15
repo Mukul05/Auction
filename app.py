@@ -204,6 +204,8 @@ async def mark_item_sold(request: Request, item_id: int):
             try:
                 db.mark_item_as_sold(item_id, highest_bid['user_id'], highest_bid['sold_price'])
                 message = "Item marked as sold."
+                item_name_email = db.get_item_name(item_id)
+                send_email_notifications_update(item_id, item_name_email, 'sold')
             except Exception as e:
                 print(f"Error marking item as sold: {e}")
                 # Render an error page or return a specific response
@@ -215,6 +217,7 @@ async def mark_item_sold(request: Request, item_id: int):
             message = "No bids placed on this item. Cannot mark as sold."
 
         # Redirect back to seller_home with a message
+
         response = RedirectResponse(url="/seller_home", status_code=303)
         response.set_cookie(key="message", value=message)
         return response
@@ -344,7 +347,8 @@ async def delete_item(request: Request, item_id: int):
     user_id = request.session.get('user_id')
     if not user_id:
         return RedirectResponse(url="/login", status_code=303)
-
+    item_name = db.get_item_name(item_id)
+    send_email_notifications_update(item_id,item_name,'deleted')
     db.delete_auction_item(item_id)
 
     return RedirectResponse(url="/seller_home", status_code=303)
@@ -389,6 +393,8 @@ async def admin_mark_item_sold(request: Request, item_id: int):
             try:
                 db.mark_item_as_sold(item_id, highest_bid['user_id'], highest_bid['sold_price'])
                 message = "Item marked as sold."
+                item_name_email = db.get_item_name(item_id)
+                send_email_notifications_update(item_id, item_name_email, 'sold')
             except Exception as e:
                 print(f"Error marking item as sold by admin: {e}")
                 return templates.TemplateResponse("error.html", {
@@ -415,7 +421,8 @@ async def admin_delete_item(request: Request, item_id: int):
     user_type = request.session.get('user_type')
     if user_type != 'admin':
         return RedirectResponse(url="/login", status_code=303)
-
+    item_name = db.get_item_name(item_id)
+    send_email_notifications_update(item_id, item_name, 'deleted')
     db.delete_auction_item(item_id)
     return RedirectResponse(url="/admin_home", status_code=303)
 
@@ -437,7 +444,36 @@ def send_email(email, item_name, bid_amount):
         # SMTP server configuration for Gmail
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         #server.starttls()
-        server.login('mukulsharma1998@gmail.com', '-')  # Replace with your Gmail credentials
+        server.login('mukulsharma1998@gmail.com', 'xojbwcoehidzuqni')  # Replace with your Gmail credentials
+        server.send_message(msg)
+        server.quit()
+    except Exception as e:
+        raise Exception(f"Email sending failed: {e}")
+
+def send_email_notifications_update(item_id, item_name, update_type):
+    # Fetch the seller and all bidders' emails
+    seller_and_bidders_emails = db.fetch_emails_for_notification(item_id)
+    for email in seller_and_bidders_emails:
+        send_email_update(email, item_name, update_type)
+
+
+def send_email_update(email, item_name, update_type):
+    if update_type == 'sold':
+        subject = f'Important Update: {item_name} is Sold'
+        body = f"Hi,\n\nThe auction item '{item_name}' has been successfully sold."
+    elif update_type == 'deleted':
+        subject = f'Important Update: {item_name} has been Removed'
+        body = f"Hi,\n\nThe auction item '{item_name}' has been removed from the auction."
+    try:
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = 'mukulsharma1998@gmail.com'  # Replace with your Gmail address
+        msg['To'] = email
+
+        # SMTP server configuration for Gmail
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        #server.starttls()
+        server.login('mukulsharma1998@gmail.com', 'xojbwcoehidzuqni')  # Replace with your Gmail credentials
         server.send_message(msg)
         server.quit()
     except Exception as e:
