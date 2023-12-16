@@ -23,7 +23,10 @@ Before you begin, ensure you have the following installed:
    - Directory: Select your desired project directory.
 3. Click `Clone`.
 
-#### Setting Up a Virtual Environment
+### if you want to directly use CMD then follow the steps at 
+- [Command.md]([https://git-scm.com/downloads](https://github.com/Mukul05/ENCS/blob/master/CMD%20Commands.md))
+
+#### Setting Up a Virtual Environment in Pycharm
 
 1. After the project opens, navigate to `File` > `Settings` > `Project: myproject` > `Python Interpreter`.
 2. Click the gear icon, select `Add`, and choose `Virtualenv Environment`.
