@@ -24,7 +24,7 @@ Before you begin, ensure you have the following installed:
 3. Click `Clone`.
 
 ### if you want to directly use CMD then follow the steps at 
-- [Command.md]([https://git-scm.com/downloads](https://github.com/Mukul05/ENCS/blob/master/CMD%20Commands.md))
+- [Command.md](https://github.com/Mukul05/ENCS/blob/master/CMD%20Commands.md)
 
 #### Setting Up a Virtual Environment in Pycharm
 
