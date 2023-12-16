@@ -34,9 +34,10 @@ Before you begin, ensure you have the following installed:
 #### Installing Dependencies
 
 1. Open the integrated terminal in PyCharm.
-2. Run the following command to install required packages or run from requirements.txt:
+2. Run the following command to install required packages :
 ```bash
-pip install fastapi typer uvicorn pydantic python-multipart toml minio pymongo pyjwt[crypto] python-dotenv pandas Jinja2 mysql-connector-python
+pip install fastapi typer uvicorn pydantic python-multipart toml minio pymongo pyjwt[crypto] python-dotenv pandas Jinja2 mysql-connector-python itsdangerous
+
 ```
 
 ### Running the Application
