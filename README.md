@@ -39,14 +39,25 @@ Before you begin, ensure you have the following installed:
 pip install fastapi typer uvicorn pydantic python-multipart toml minio pymongo pyjwt[crypto] python-dotenv pandas Jinja2 mysql-connector-python itsdangerous
 
 ```
+ ### Set up the Uvicorn Run Configuration:
 
-### Running the Application
+1. Go to Run > Edit Configurations.
+2. Click the + icon to add a new configuration.
+3. Select Python.
+4. Give your configuration a name, like "Uvicorn Server".
+5. In the Script path or Module name field, type uvicorn.
+6. In the Parameters field, type app:app --reload (replace app:app with your actual app module and instance if different).
+7. Ensure the correct Python interpreter (your virtual environment) is selected.
+8. Click OK to save the configuration.
+9.   Run Your Uvicorn Server:
 
-1. Open the terminal in PyCharm.
-2. Navigate to the project directory.
-3. Run the application using Uvicorn with the following command:
-```bash
-uvicorn app:app --reload
-```
-(Note: Replace `app:app` with your module and FastAPI instance names if they are different.)
+10. Select the Uvicorn run configuration you just created from the top-right dropdown menu.
+11. Click the green play button to start the server.
+
+### Access Your FastAPI Application:
+
+Once the Uvicorn server is running, you should see output in the console indicating that the server is live (usually on localhost:8000).
+Open a web browser and navigate to http://localhost:8000 to access your FastAPI application.
+
+
 
