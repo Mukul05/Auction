@@ -6,7 +6,7 @@
 
 1. Open PyCharm and click `Get from VCS` on the Welcome screen.
 2. In the `Clone Repository` dialog, enter:
-   - URL: `[https://github.com/Mukul05/ENCS.git]` (replace this with your repository's URL)
+   - URL: `[https://github.com/Mukul05/ENCS.git]` 
    - Directory: Select your desired project directory.
 3. Click `Clone`.
 4. Open cmd and write given commands
