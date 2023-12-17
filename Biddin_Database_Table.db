@@ -29,8 +29,10 @@ CREATE TABLE auction_items (
     start_time DATETIME NOT NULL,
     end_time DATETIME NOT NULL,
     min_bid DECIMAL(10, 2) NOT NULL,
+    is_sold BOOLEAN DEFAULT FALSE,  -- Added column
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
+
 
 CREATE TABLE bids (
     bid_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -40,5 +42,4 @@ CREATE TABLE bids (
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (item_id) REFERENCES auction_items(item_id)
 );
-ALTER TABLE auction_items ADD COLUMN is_sold BOOLEAN DEFAULT FALSE;
 INSERT INTO users (name, email_id, password, user_type) values ('Admin', 'onlinebidder17@gmail.com', 'admin', 'admin')
