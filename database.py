@@ -254,6 +254,52 @@ class Database:
             return row[0]
         return None
 
+    def fetch_all_users(self):
+        sql = """
+           SELECT user_id, name, email_id, user_type
+           FROM users where user_type <> 'admin'
+           """
+        self.cursor.execute(sql)
+        rows = self.cursor.fetchall()
+        columns = [col[0] for col in self.cursor.description]
+        return [dict(zip(columns, row)) for row in rows]
+
+    def delete_user_with_dependencies(self, user_id):
+        # Update or delete records in sold_items, auction_items, and bids
+        self.delete_related_bids_and_sold_items(user_id)
+
+        # Delete the seller's auction items
+        self.delete_auction_items(user_id)
+
+        # Finally, delete the seller
+        self.delete_user(user_id)
+
+
+
+    def delete_related_bids_and_sold_items(self, user_id):
+        # Delete bids and sold_items related to auction_items of the seller
+        sql = """
+        DELETE bids, sold_items 
+        FROM bids
+        JOIN auction_items ON bids.item_id = auction_items.item_id
+        LEFT JOIN sold_items ON auction_items.item_id = sold_items.item_id
+        WHERE auction_items.user_id = %s
+        """
+        self.cursor.execute(sql, (user_id,))
+        self.conn.commit()
+
+    def delete_auction_items(self, user_id):
+        # Delete auction items of the seller
+        sql = "DELETE FROM auction_items WHERE user_id = %s"
+        self.cursor.execute(sql, (user_id,))
+        self.conn.commit()
+
+    def delete_user(self, user_id):
+        # Delete the user
+        sql = "DELETE FROM users WHERE user_id = %s"
+        self.cursor.execute(sql, (user_id,))
+        self.conn.commit()
+
 
 
     def close(self):

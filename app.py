@@ -457,6 +457,20 @@ async def admin_delete_item(request: Request, item_id: int):
     db.delete_auction_item(item_id)
     return RedirectResponse(url="/admin_home", status_code=303)
 
+@app.get("/admin/users", response_class=HTMLResponse)
+async def admin_users(request: Request):
+    users = db.fetch_all_users()
+    return templates.TemplateResponse("admin_users.html", {
+        "request": request,
+        "users": users
+    })
+
+@app.post("/admin/delete_user/{user_id}")
+async def admin_delete_user(request: Request, user_id: int):
+    db.delete_user_with_dependencies(user_id)
+    return RedirectResponse(url="/admin/users", status_code=303)
+
+
 def send_email_notifications(item_id, item_name, bid_amount):
     # Fetch the seller and all bidders' emails
     seller_and_bidders_emails = db.fetch_emails_for_notification(item_id)

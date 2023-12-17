@@ -2,7 +2,6 @@ create schema bid_system;
 use bid_system;
 
 
-
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -11,16 +10,6 @@ CREATE TABLE users (
     user_type ENUM('buyer', 'seller', 'admin') NOT NULL
 );
 
-
-	CREATE TABLE sold_items (
-		sold_id INT AUTO_INCREMENT PRIMARY KEY,
-		item_id INT,
-		buyer_id INT,
-		sold_price DECIMAL(10, 2),
-		sold_time DATETIME,
-		FOREIGN KEY (item_id) REFERENCES auction_items(item_id),
-		FOREIGN KEY (buyer_id) REFERENCES users(user_id)
-	);
 CREATE TABLE auction_items (
     item_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
@@ -33,7 +22,6 @@ CREATE TABLE auction_items (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
-
 CREATE TABLE bids (
     bid_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
@@ -42,4 +30,18 @@ CREATE TABLE bids (
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (item_id) REFERENCES auction_items(item_id)
 );
-INSERT INTO users (name, email_id, password, user_type) values ('Admin', 'onlinebidder17@gmail.com', 'admin', 'admin')
+CREATE TABLE sold_items (
+		sold_id INT AUTO_INCREMENT PRIMARY KEY,
+		item_id INT,
+		buyer_id INT,
+		sold_price DECIMAL(10, 2),
+		sold_time DATETIME,
+		FOREIGN KEY (item_id) REFERENCES auction_items(item_id),
+		FOREIGN KEY (buyer_id) REFERENCES users(user_id)
+	);
+INSERT INTO users (name, email_id, password, user_type) values ('Admin', 'onlinebidder17@gmail.com', 'admin', 'admin');
+
+select * from users;
+select * from sold_items;
+select * from auction_items;
+select * from bids;
