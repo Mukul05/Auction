@@ -3,10 +3,24 @@
 <head>
     <title>View Bids</title>
     <style>
-        /* Add your CSS styles here */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         .container {
             width: 80%;
             margin: auto;
+            padding: 20px;
         }
         .item-details, .bids-table {
             margin-top: 20px;
@@ -22,9 +36,18 @@
         th {
             background-color: #f4f4f4;
         }
+        .logout, .back-button {
+            cursor: pointer;
+            color: #4CAF50;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
+    <div class="header">
+        <a href="javascript:history.back()" class="back-button">Back</a>
+        <a href="/logout" class="logout">Logout</a>
+    </div>
     <div class="container">
         <div class="item-details">
             <h2>Item Details</h2>
@@ -34,20 +57,20 @@
             <p><strong>Minimum Bid:</strong> ${{ item['min_bid'] }}</p>
         </div>
         <div class="bids-table">
-    <h2>Bids</h2>
-    <table>
-        <tr>
-            <th>Bidder Name</th>
-            <th>Email</th>
-            <th>Amount</th>
-        </tr>
-        {% for bid in bids %}
-        <tr>
-           <td>{{ bid['bidder_name'] }}</td>
-        <td>{{ bid['email_id'] }}</td>
-        <td>${{ bid['amount'] }}</td>
-        </tr>
-        {% endfor %}
+            <h2>Bids</h2>
+            <table>
+                <tr>
+                    <th>Bidder Name</th>
+                    <th>Email</th>
+                    <th>Amount</th>
+                </tr>
+                {% for bid in bids %}
+                <tr>
+                    <td>{{ bid['bidder_name'] }}</td>
+                    <td>{{ bid['email_id'] }}</td>
+                    <td>${{ bid['amount'] }}</td>
+                </tr>
+                {% endfor %}
             </table>
         </div>
     </div>

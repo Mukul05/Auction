@@ -205,9 +205,17 @@ async def mark_item_sold(request: Request, item_id: int):
             try:
                 db.mark_item_as_sold(item_id, highest_bid['user_id'], highest_bid['sold_price'])
                 message = "Item marked as sold."
+                winner_email=db.get_user_email(highest_bid['user_id'])
                 item_name_email = db.get_item_name(item_id)
+                if winner_email:
+                    # Send email to the winner
+                    try:
+                        send_email_winner(winner_email, item_name_email, 'Congratulations! You are the highest bidder')
+                    except Exception as e:
+                        print(f"Failed to send email to winner: {e}")
                 try:
                     send_email_notifications_update(item_id, item_name_email, 'sold')
+
                 except Exception as e:
                     print(f"Failed to send email notifications: {e}")
 
@@ -402,6 +410,15 @@ async def admin_mark_item_sold(request: Request, item_id: int):
                 db.mark_item_as_sold(item_id, highest_bid['user_id'], highest_bid['sold_price'])
                 message = "Item marked as sold."
                 item_name_email = db.get_item_name(item_id)
+                winner_email = db.get_user_email(highest_bid['user_id'])
+
+                if winner_email:
+                    # Send email to the winner
+                    try:
+                        send_email_winner(winner_email, item_name_email, 'Congratulations! You are the highest bidder')
+                    except Exception as e:
+                        print(f"Failed to send email to winner: {e}")
+
                 try:
                     send_email_notifications_update(item_id, item_name_email, 'sold')
                 except Exception as e:
@@ -492,6 +509,20 @@ def send_email_update(email, item_name, update_type):
         server.quit()
     except Exception as e:
         raise Exception(f"Email sending failed: {e}")
+
+def send_email_winner(email, item_name, update_type):
+    try:
+        msg = MIMEText(f"Hi,\n\n{update_type}. You have won the item '{item_name}'.")
+        msg['Subject'] = f'Item Won: {item_name}'
+        msg['From'] = 'onlinebidder17@gmail.com'  # Replace with your Gmail address
+        msg['To'] = email
+
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.login('onlinebidder17@gmail.com', 'ijriugibmekltnjt')  # Replace with your Gmail credentials
+        server.send_message(msg)
+        server.quit()
+    except Exception as e:
+        print(f"Email sending failed: {e}")
 
 
 
