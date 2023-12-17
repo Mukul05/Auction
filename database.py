@@ -5,7 +5,7 @@ import os
 class Database:
     def __init__(self):
         self.conn = mysql.connector.connect(
-            host='localhost',  # MySQL service name in
+            host='144.24.144.192',  # MySQL service name in
             port='3306',
             user='root',
             password='root',

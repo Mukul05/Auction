@@ -1,5 +1,8 @@
 import os
 import smtplib
+import typer
+import uvicorn
+
 from email.mime.text import MIMEText
 
 from fastapi import FastAPI, Request, Form, File, UploadFile
@@ -15,7 +18,8 @@ from starlette.datastructures import Secret
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime
 from error_handling import database_error_handler
-
+DEFAULT_HOST = "localhost"
+DEFAULT_PORT = 5000
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 templates = Jinja2Templates(directory="templates")
@@ -494,6 +498,9 @@ def send_email_update(email, item_name, update_type):
         raise Exception(f"Email sending failed: {e}")
 
 
+def main(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
+    uvicorn.run(app, host=host, port=port)
 
 
-
+if __name__ == "__main__":
+    typer.run(main)
