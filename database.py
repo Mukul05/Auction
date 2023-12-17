@@ -177,7 +177,7 @@ class Database:
         sql = "SELECT email_id FROM users WHERE user_id = %s"
         self.cursor.execute(sql, (user_id,))
         row = self.cursor.fetchone()
-        return row['email_id'] if row else None
+        return row[0] if row else None  # Accessing the first element of the tuple
 
     def delete_auction_item(self, item_id):
         delete_bids_sql = "DELETE FROM bids WHERE item_id = %s"

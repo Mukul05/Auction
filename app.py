@@ -512,7 +512,7 @@ def send_email_update(email, item_name, update_type):
 
 def send_email_winner(email, item_name, update_type):
     try:
-        msg = MIMEText(f"Hi,\n\n{update_type}. You have won the item '{item_name}'.")
+        msg = MIMEText(f"Hi,\n\n{update_type}. You have won the item '{item_name}' , To receive the item please make the payment and send your Address details and ID (One Piece) to onlinebidder17@gmail.com .")
         msg['Subject'] = f'Item Won: {item_name}'
         msg['From'] = 'onlinebidder17@gmail.com'  # Replace with your Gmail address
         msg['To'] = email
