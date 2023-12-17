@@ -53,11 +53,26 @@
         .bid-form input[type=submit]:hover {
             background-color: #0056b3;
         }
+        .logout, .back-button {
+            cursor: pointer;
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        .header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
     </style>
-
 </head>
 <body>
-
+    <div class="header">
+        <a href="javascript:history.back()" class="back-button">Back</a>
+        <a href="/logout" class="logout">Logout</a>
+    </div>
     <div class="container" data-highest-bid="{{ highest_bid_amount | default(0, true) }}" data-min-bid="{{ item['min_bid'] }}">
         <div class="item-details">
             <img src="/{{ item['image_url'] }}" alt="{{ item['item_name'] }}">

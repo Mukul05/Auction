@@ -14,6 +14,7 @@ class Database:
         self.cursor = self.conn.cursor()
 
     # User Operations
+    # User Operations
     def create_user(self, name, email_id, password, user_type):
         sql = "INSERT INTO users (name, email_id, password, user_type) VALUES (%s, %s, %s, %s)"
         self.cursor.execute(sql, (name, email_id, password, user_type))
@@ -44,9 +45,8 @@ class Database:
         self.cursor.execute(sql, (user_id,))
         self.conn.commit()
 
+        # Auction Item Operations
 
-
-    # Auction Item Operations
     def add_auction_item(self, user_id, item_name, image_url, start_time, end_time, min_bid):
         sql = "INSERT INTO auction_items (user_id, item_name, image_url, start_time, end_time, min_bid) VALUES (%s, %s, %s, %s, %s, %s)"
         self.cursor.execute(sql, (user_id, item_name, image_url, start_time, end_time, min_bid))
@@ -85,10 +85,10 @@ class Database:
 
     def fetch_all_items_with_sellers(self):
         sql = """
-        SELECT auction_items.*, users.name AS seller_name
-        FROM auction_items
-        JOIN users ON auction_items.user_id = users.user_id
-        """
+         SELECT auction_items.*, users.name AS seller_name
+         FROM auction_items
+         JOIN users ON auction_items.user_id = users.user_id
+         """
         self.cursor.execute(sql)
         rows = self.cursor.fetchall()
         columns = [col[0] for col in self.cursor.description]
@@ -106,9 +106,10 @@ class Database:
         self.cursor.execute(sql, (user_id, item_name, image_path, start_time, end_time, min_bid))
         self.conn.commit()
 
-    # ... similarly implement view_auction_item, update_auction_item, delete_auction_item
+        # ... similarly implement view_auction_item, update_auction_item, delete_auction_item
 
-    # Bid Operations
+        # Bid Operations
+
     def place_bid(self, user_id, item_id, amount):
         sql = "INSERT INTO bids (user_id, item_id, amount) VALUES (%s, %s, %s)"
         self.cursor.execute(sql, (user_id, item_id, amount))
@@ -131,17 +132,16 @@ class Database:
 
     def fetch_bids_for_item(self, item_id):
         sql = """
-        SELECT bids.bid_id, bids.amount, users.name as bidder_name, users.email_id
-        FROM bids
-        JOIN users ON bids.user_id = users.user_id
-        WHERE bids.item_id = %s
-        ORDER BY bids.amount DESC
-        """
+         SELECT bids.bid_id, bids.amount, users.name as bidder_name, users.email_id
+         FROM bids
+         JOIN users ON bids.user_id = users.user_id
+         WHERE bids.item_id = %s
+         ORDER BY bids.amount DESC
+         """
         self.cursor.execute(sql, (item_id,))
         rows = self.cursor.fetchall()
         columns = [col[0] for col in self.cursor.description]
         return [dict(zip(columns, row)) for row in rows]
-
 
     def fetch_item_details(self, item_id):
         sql = "SELECT * FROM auction_items WHERE item_id = %s"
@@ -154,16 +154,17 @@ class Database:
 
     def fetch_bids_for_seller(self, item_id):
         sql = """
-        SELECT bids.amount, users.name AS bidder_name
-        FROM bids
-        JOIN users ON bids.user_id = users.user_id
-        WHERE bids.item_id = %s
-        ORDER BY bids.amount DESC
-        """
+         SELECT bids.amount, users.name AS bidder_name
+         FROM bids
+         JOIN users ON bids.user_id = users.user_id
+         WHERE bids.item_id = %s
+         ORDER BY bids.amount DESC
+         """
         self.cursor.execute(sql, (item_id,))
         rows = self.cursor.fetchall()
         columns = [col[0] for col in self.cursor.description]
         return [dict(zip(columns, row)) for row in rows]
+
     def fetch_highest_bid_for_item(self, item_id):
         sql = "SELECT user_id, MAX(amount) as sold_price FROM bids WHERE item_id = %s GROUP BY user_id ORDER BY sold_price DESC LIMIT 1"
         self.cursor.execute(sql, (item_id,))
@@ -172,6 +173,12 @@ class Database:
             columns = [col[0] for col in self.cursor.description]
             return dict(zip(columns, row))
         return None
+
+    def get_user_email(self, user_id):
+        sql = "SELECT email_id FROM users WHERE user_id = %s"
+        self.cursor.execute(sql, (user_id,))
+        row = self.cursor.fetchone()
+        return row[0] if row else None  # Accessing the first element of the tuple
 
     def delete_auction_item(self, item_id):
         delete_bids_sql = "DELETE FROM bids WHERE item_id = %s"
@@ -186,11 +193,11 @@ class Database:
 
     def fetch_available_auction_items(self):
         sql = """
-        SELECT auction_items.*, users.name as seller_name 
-        FROM auction_items 
-        JOIN users ON auction_items.user_id = users.user_id 
-        WHERE auction_items.is_sold = FALSE AND auction_items.end_time > NOW()
-        """
+         SELECT auction_items.*, users.name as seller_name 
+         FROM auction_items 
+         JOIN users ON auction_items.user_id = users.user_id 
+         WHERE auction_items.is_sold = FALSE AND auction_items.end_time > NOW()
+         """
         self.cursor.execute(sql)
         rows = self.cursor.fetchall()
         columns = [col[0] for col in self.cursor.description]
@@ -201,26 +208,24 @@ class Database:
         self.cursor.execute(sql, (user_id, item_id, bid_amount))
         self.conn.commit()
 
-
-
     def fetch_emails_for_notification(self, item_id):
         # Fetch the seller's and all bidders' email addresses for the item
         sql = """
-        SELECT DISTINCT u.email_id FROM users u
-        JOIN bids b ON u.user_id = b.user_id OR u.user_id = (SELECT user_id FROM auction_items WHERE item_id = %s)
-        WHERE b.item_id = %s
-        """
+         SELECT DISTINCT u.email_id FROM users u
+         JOIN bids b ON u.user_id = b.user_id OR u.user_id = (SELECT user_id FROM auction_items WHERE item_id = %s)
+         WHERE b.item_id = %s
+         """
         self.cursor.execute(sql, (item_id, item_id))
         return [row[0] for row in self.cursor.fetchall()]
 
     def fetch_sold_item_details(self, item_id):
         sql = """
-        SELECT ai.item_name, si.sold_price, u.email_id AS buyer_email, si.sold_time
-        FROM auction_items ai
-        JOIN sold_items si ON ai.item_id = si.item_id
-        JOIN users u ON si.buyer_id = u.user_id
-        WHERE ai.item_id = %s AND ai.is_sold = TRUE
-        """
+         SELECT ai.item_name, si.sold_price, u.email_id AS buyer_email, si.sold_time
+         FROM auction_items ai
+         JOIN sold_items si ON ai.item_id = si.item_id
+         JOIN users u ON si.buyer_id = u.user_id
+         WHERE ai.item_id = %s AND ai.is_sold = TRUE
+         """
         self.cursor.execute(sql, (item_id,))
         row = self.cursor.fetchone()
         if row:
@@ -235,11 +240,12 @@ class Database:
 
         # Insert into sold_items table
         insert_sql = """
-        INSERT INTO sold_items (item_id, buyer_id, sold_price, sold_time)
-        VALUES (%s, %s, %s, NOW())
-        """
+         INSERT INTO sold_items (item_id, buyer_id, sold_price, sold_time)
+         VALUES (%s, %s, %s, NOW())
+         """
         self.cursor.execute(insert_sql, (item_id, buyer_id, sold_price))
         self.conn.commit()
+
     def get_item_name(self, item_id):
         query = "SELECT item_name FROM auction_items WHERE item_id = %s"
         self.cursor.execute(query, (item_id,))
@@ -247,8 +253,6 @@ class Database:
         if row:
             return row[0]
         return None
-
-
 
     def close(self):
         self.conn.close()
